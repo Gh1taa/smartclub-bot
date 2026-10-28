@@ -1,0 +1,4 @@
+.env
+.venv/
+embeddings_cache.json
+__pycache__/
