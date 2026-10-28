@@ -13,6 +13,7 @@ an admin when a human is needed.
 | `knowledge/` | The club's information as text files |
 | `.env` | Your keys (never share) |
 | `host.py` | Starts the bot on Render (free 24/7 hosting), see `DEPLOY.md` |
+| `webapp.py`, `set_webhook.py` | The bot as a website on PythonAnywhere (free, no card), see `PYTHONANYWHERE.md` |
 | `.python-version` | Python version used on Render |
 
 This folder is self-contained: copy or move it anywhere, it needs nothing outside it

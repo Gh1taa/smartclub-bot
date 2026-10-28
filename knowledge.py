@@ -29,6 +29,7 @@ SHEET_CSV_URL = os.getenv("SHEET_CSV_URL", "")
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"], http_options=types.HttpOptions(timeout=30_000))
 _chunks: list[dict] = []  # {"title", "url", "text", "vector"}
 _lock = threading.Lock()
+_last_refresh = 0.0
 
 
 def _split(text: str, max_words: int = 400, overlap: int = 50) -> list[str]:
@@ -108,6 +109,18 @@ def start_auto_refresh(minutes: float = 5):
             except Exception as e:
                 print(f"[knowledge] refresh failed: {e}")
     threading.Thread(target=loop, daemon=True).start()
+
+
+def refresh_if_old(minutes: float = 5):
+    """For the website version (webapp.py), which can't run a background loop: reload on a message
+    when the information is older than `minutes`."""
+    global _last_refresh
+    if time.time() - _last_refresh > minutes * 60:
+        _last_refresh = time.time()
+        try:
+            print(f"[knowledge] {refresh()} pieces of club information loaded.")
+        except Exception as e:
+            print(f"[knowledge] refresh failed: {e}")
 
 
 def _similarity(a: list[float], b: list[float]) -> float:

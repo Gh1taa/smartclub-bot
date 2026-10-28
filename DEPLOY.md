@@ -5,6 +5,9 @@ service, no credit card), and use **cron-job.org** (free) to keep it awake.
 
 Total time: about 30 minutes. You only do this once.
 
+> Render asks some new accounts for a card even on the free plan. If that happens, use
+> `PYTHONANYWHERE.md` instead (free, no card).
+
 ## Why Render + cron-job.org?
 
 | Host | Free without a card? | Runs 24/7? |
