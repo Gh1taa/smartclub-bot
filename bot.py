@@ -37,14 +37,29 @@ TEXT_ONLY = ("Désolé, je ne lis que les messages écrits. Pouvez-vous écrire 
 paused: dict[int, float] = {}   # chat id -> time when the bot may answer again
 
 
+def telegram(method: str, payload: dict, tries: int = 3):
+    """Calls the Telegram API, retrying when the network fails for a moment
+    (PythonAnywhere's free proxy sometimes answers 503)."""
+    for attempt in range(tries):
+        try:
+            return httpx.post(f"{API}/{method}", json=payload, timeout=30)
+        except httpx.TransportError:
+            if attempt == tries - 1:
+                raise
+            time.sleep(2)
+
+
 def send(chat_id, text: str):
     for i in range(0, len(text), 4000):  # Telegram limit: 4096 characters per message
-        httpx.post(f"{API}/sendMessage", json={"chat_id": chat_id, "text": text[i:i + 4000]}, timeout=30)
+        telegram("sendMessage", {"chat_id": chat_id, "text": text[i:i + 4000]})
 
 
 def show_typing(chat_id, stop: threading.Event):
     while not stop.is_set():  # "typing…" lasts about 5 seconds, so repeat it
-        httpx.post(f"{API}/sendChatAction", json={"chat_id": chat_id, "action": "typing"}, timeout=30)
+        try:
+            telegram("sendChatAction", {"chat_id": chat_id, "action": "typing"}, tries=1)
+        except httpx.TransportError:
+            pass  # the typing indicator is optional
         stop.wait(4)
 
 
