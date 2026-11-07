@@ -13,6 +13,7 @@ an admin when a human is needed.
 | `knowledge/` | The club's information as text files |
 | `.env` | Your keys (never share) |
 | `host.py` | Starts the bot on Render (free 24/7 hosting), see `DEPLOY.md` |
+| `website_to_sheet.gs` | Script for the Google Sheet: copies the website into a "Site web" tab every hour, see `WEBSITE.md` |
 | `webapp.py`, `set_webhook.py` | The bot as a website on PythonAnywhere (free, no card), see `PYTHONANYWHERE.md` |
 | `.python-version` | Python version used on Render |
 
@@ -40,6 +41,8 @@ The bot runs while this window is open. Stop it with Ctrl+C.
 - Edit files in `knowledge/` or rows in the Google Sheet. The bot reloads every 5 minutes
   (or restart it to reload now).
 - Sheet columns: `Sujet` | `Information` | `Lien` | `Actif` (`non` hides a row).
+- The website is copied into the Sheet's "Site web" tab every hour by `website_to_sheet.gs`
+  (see `WEBSITE.md`).
 
 ## Handoff to a human
 1. Send `/myid` to the bot and put the number in `.env` as `ADMIN_CHAT_ID`, then restart.

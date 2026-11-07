@@ -1,4 +1,5 @@
-"""The club's information: text files in knowledge/ + the Google Sheet, searchable by meaning.
+"""The club's information: text files in knowledge/ + the Google Sheet (and its "Site web" tab,
+a copy of the website), searchable by meaning.
 
 Each piece of text is turned into an embedding (a list of numbers that captures its meaning).
 A question is turned into numbers the same way, and the closest pieces are returned.
@@ -25,6 +26,7 @@ KNOWLEDGE_DIR = ROOT / "knowledge"
 CACHE_FILE = ROOT / "embeddings_cache.json"
 EMBED_MODEL = "gemini-embedding-001"
 SHEET_CSV_URL = os.getenv("SHEET_CSV_URL", "")
+WEBSITE_CSV_URL = os.getenv("WEBSITE_CSV_URL", "")  # "Site web" tab, filled from the website by website_to_sheet.gs
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"], http_options=types.HttpOptions(timeout=30_000))
 _chunks: list[dict] = []  # {"title", "url", "text", "vector"}
@@ -54,11 +56,11 @@ def _read_files() -> list[dict]:
     return docs
 
 
-def _read_sheet() -> list[dict]:
+def _read_sheet(url: str) -> list[dict]:
     """Google Sheet columns: Sujet | Information | Lien | Actif ("non" hides a row)."""
-    if not SHEET_CSV_URL:
+    if not url:
         return []
-    r = httpx.get(SHEET_CSV_URL, follow_redirects=True, timeout=30)
+    r = httpx.get(url, follow_redirects=True, timeout=30)
     r.raise_for_status()
     docs = []
     for row in csv.DictReader(io.StringIO(r.content.decode("utf-8-sig"))):
@@ -83,10 +85,11 @@ def refresh() -> int:
     """Reload files + sheet. Only new or changed text is embedded. Returns the number of pieces."""
     global _chunks
     docs = _read_files()
-    try:
-        docs += _read_sheet()
-    except Exception as e:
-        print(f"[knowledge] Google Sheet not loaded: {e}")
+    for name, url in (("Google Sheet", SHEET_CSV_URL), ("Website tab", WEBSITE_CSV_URL)):
+        try:
+            docs += _read_sheet(url)
+        except Exception as e:
+            print(f"[knowledge] {name} not loaded: {e}")
     pieces = [{"title": d["title"], "url": d["url"], "text": p} for d in docs for p in _split(d["text"])]
 
     with _lock:
