@@ -105,6 +105,9 @@ def handle(msg: dict):
     threading.Thread(target=show_typing, args=(chat_id, stop), daemon=True).start()
     try:
         answer, handoff = agent.reply(str(chat_id), text)
+    except Exception as e:  # never leave the student without an answer
+        print(f"ERROR in the agent: {e!r}")
+        answer, handoff = agent.FALLBACK_REPLY, None
     finally:
         stop.set()
     print(f"OUT {name}: {answer}")

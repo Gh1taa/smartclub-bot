@@ -47,7 +47,11 @@ TOOLS = [types.Tool(function_declarations=[
 
 
 def _search_text(query: str) -> str:
-    results = knowledge.search(query)
+    try:
+        results = knowledge.search(query)
+    except (httpx.TransportError, errors.APIError) as e:  # network or limit hiccup: answer without it
+        print(f"  [agent] search failed ({e!r})")
+        return "Search is unavailable right now."
     if not results:
         return "Nothing found."
     return "\n\n---\n\n".join(f"[{r['title']}]{' (' + r['url'] + ')' if r['url'] else ''}\n{r['text']}"
@@ -105,8 +109,8 @@ def reply(user_id: str, text: str) -> tuple[str, str | None]:
             if e.code == 429:
                 _busy_until[model] = time.time() + 60   # skip this model for a minute
             print(f"  [agent] {model} unavailable ({e.code}), trying the next one")
-        except httpx.TimeoutException:
-            print(f"  [agent] {model} timed out, trying the next one")
+        except httpx.TransportError as e:  # timeout, or PythonAnywhere's proxy answering 503
+            print(f"  [agent] {model} unreachable ({e!r}), trying the next one")
 
     answer = answer or FALLBACK_REPLY
     past += [("user", text), ("model", answer)]
